@@ -1,0 +1,604 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hospital Management System</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial;background:#f1f6fc;color:#17365d}
+header{background:#205a96;color:white;padding:20px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+header input{max-width:350px}
+nav{background:white;padding:12px;display:flex;gap:8px;flex-wrap:wrap}
+main{padding:20px}
+button{padding:10px 14px;border:0;border-radius:5px;background:#176dcc;color:white;cursor:pointer;margin:3px}
+button:hover{opacity:.8}
+.danger{background:#dc3545}
+.edit{background:#e4a126;color:#222}
+nav button{background:#e3efff;color:#17365d}
+nav button.active{background:#176dcc;color:white}
+input,select,textarea{width:100%;padding:11px;margin:6px 0 14px;border:1px solid #ccd7e5;border-radius:5px}
+label{font-weight:bold}
+.card{background:white;padding:20px;border-radius:10px;box-shadow:0 2px 8px #dce5ef}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px}
+.card h2{font-size:30px}
+.section{background:white;padding:20px;border-radius:10px;margin-bottom:20px;overflow-x:auto}
+.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+table{border-collapse:collapse;width:100%;min-width:650px}
+th,td{padding:12px;text-align:left;border-bottom:1px solid #e0e8f1}
+th{background:#eaf3ff}
+.hidden{display:none}
+@media(max-width:750px){.cards{grid-template-columns:repeat(2,1fr)}.formgrid{grid-template-columns:1fr}}
+@media(max-width:450px){.cards{grid-template-columns:1fr}main{padding:10px}}
+</style>
+</head>
+<body>
+<header>
+<h2>✚ Hospital Management System</h2>
+<input id="search" placeholder="Search records..." oninput="render()">
+</header>
+
+<nav id="nav">
+<button class="active" onclick="page('dashboard',this)">Dashboard</button>
+<button onclick="page('patients',this)">Patients</button>
+<button onclick="page('doctors',this)">Doctors</button>
+<button onclick="page('appointments',this)">Appointments</button>
+<button onclick="page('departments',this)">Departments</button>
+<button onclick="page('billing',this)">Billing</button>
+</nav>
+
+<main>
+<div id="dashboard" class="view">
+<div class="section"><h1>Welcome, Admin!</h1><p>Hospital Management Dashboard</p></div>
+<div class="cards">
+<div class="card"><h3>Patients</h3><h2 id="cp">0</h2></div>
+<div class="card"><h3>Doctors</h3><h2 id="cd">0</h2></div>
+<div class="card"><h3>Appointments</h3><h2 id="ca">0</h2></div>
+<div class="card"><h3>Bills</h3><h2 id="cb">0</h2></div>
+</div>
+<div class="section"><h2>Recent Appointments</h2><div id="recent"></div></div>
+</div>
+
+<div id="patients" class="view hidden">
+<div class="section">
+<h2 id="ptitle">Add Patient</h2>
+<form id="pf">
+<input type="hidden" id="pid">
+<div class="formgrid">
+<div><label>Name</label><input id="pname" required></div>
+<div><label>Age</label><input id="page" type="number" min="0" max="120" required></div>
+<div><label>Gender</label><select id="pgender" required><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select></div>
+<div><label>Phone</label><input id="pphone" pattern="[0-9]{10}" maxlength="10" required></div>
+<div><label>Address</label><input id="paddress" required></div>
+<div><label>Blood Group</label><select id="pblood" required><option value="">Select</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select></div>
+</div>
+<button type="submit">Save Patient</button><button type="button" onclick="resetForm('p')">Clear</button>
+</form>
+</div>
+<div class="section"><h2>Patient Records</h2><div id="pt"></div></div>
+</div>
+
+<div id="doctors" class="view hidden">
+<div class="section">
+<h2 id="dtitle">Add Doctor</h2>
+<form id="df">
+<input type="hidden" id="did">
+<label>Name</label><input id="dname" required>
+<label>Specialization</label><select id="dspec" required><option value="">Select</option><option>General Medicine</option><option>Cardiology</option><option>Orthopedics</option><option>Pediatrics</option><option>Dermatology</option><option>Gynecology</option><option>Neurology</option><option>Dental</option></select>
+<div class="formgrid">
+<div><label>Experience (years)</label><input id="dexp" type="number" min="0" required></div>
+<div><label>Consultation Fee (₹)</label><input id="dfee" type="number" min="0" step=".01" required></div>
+</div>
+<label>Phone</label><input id="dphone" pattern="[0-9]{10}" maxlength="10" required>
+<button type="submit">Save Doctor</button><button type="button" onclick="resetForm('d')">Clear</button>
+</form>
+</div>
+<div class="section"><h2>Doctor Records</h2><div id="dt"></div></div>
+</div>
+
+<div id="appointments" class="view hidden">
+<div class="section">
+<h2 id="atitle">Book Appointment</h2>
+<form id="af">
+<input type="hidden" id="aid">
+<label>Patient</label><select id="apatient" required></select>
+<label>Doctor</label><select id="adoctor" required></select>
+<div class="formgrid">
+<div><label>Date</label><input id="adate" type="date" required></div>
+<div><label>Time</label><input id="atime" type="time" required></div>
+</div>
+<label>Status</label><select id="astatus"><option>Booked</option><option>Confirmed</option><option>Completed</option><option>Cancelled</option></select>
+<button type="submit">Save Appointment</button><button type="button" onclick="resetForm('a')">Clear</button>
+</form>
+</div>
+<div class="section"><h2>Appointment Records</h2><div id="at"></div></div>
+</div>
+
+<div id="departments" class="view hidden">
+<div class="section">
+<h2 id="xtitle">Add Department</h2>
+<form id="xf">
+<input type="hidden" id="xid">
+<label>Department Name</label><input id="xname" required>
+<label>Head Doctor</label><input id="xhead" required>
+<label>Location / Room</label><input id="xlocation" required>
+<button type="submit">Save Department</button><button type="button" onclick="resetForm('x')">Clear</button>
+</form>
+</div>
+<div class="section"><h2>Department Records</h2><div id="xt"></div></div>
+</div>
+
+<div id="billing" class="view hidden">
+<div class="section">
+<h2 id="btitle">Create Bill</h2>
+<form id="bf">
+<input type="hidden" id="bid">
+<label>Patient</label><select id="bpatient" required></select>
+<label>Description</label><input id="bdesc" required>
+<label>Amount (₹)</label><input id="bamount" type="number" min=".01" step=".01" required>
+<label>Payment Status</label><select id="bstatus"><option>Unpaid</option><option>Paid</option><option>Partially Paid</option></select>
+<button type="submit">Save Bill</button><button type="button" onclick="resetForm('b')">Clear</button>
+</form>
+</div>
+<div class="section"><h2>Billing Records</h2><div id="bt"></div></div>
+</div>
+</main>
+
+<script>
+const data={p:[],d:[],a:[],x:[],b:[]};
+const fields={
+p:['pname','page','pgender','pphone','paddress','pblood'],
+d:['dname','dspec','dexp','dfee','dphone'],
+a:['apatient','adoctor','adate','atime','astatus'],
+x:['xname','xhead','xlocation'],
+b:['bpatient','bdesc','bamount','bstatus']
+};
+const names={p:'Patient',d:'Doctor',a:'Appointment',x:'Department',b:'Bill'};
+let counters={p:1,d:1,a:1,x:1,b:1};
+const $=id=>document.getElementById(id);
+function val(id){return $(id).value.trim()}
+function page(id,btn){
+ document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
+ $(id).classList.remove('hidden');
+ document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+ btn.classList.add('active');
+ $('search').value='';
+ render();
+}
+function resetForm(k){
+ $(k+'f').reset();
+ $(k+'id').value='';
+ $(k+'title').textContent='Add '+names[k];
+}
+function formValues(k){
+ return fields[k].map(id=>{
+  if(k==='a' && id==='apatient')return Number(val(id));
+  if(k==='a' && id==='adoctor')return Number(val(id));
+  if(k==='b' && id==='bpatient')return Number(val(id));
+  if(['page','dexp','dfee','bamount'].includes(id))return Number(val(id));
+  return val(id);
+ });
+}
+function save(k,values,id){
+ const record={id:id||counters[k]++};
+ fields[k].forEach((field,i)=>record[field]=values[i]);
+ if(id)data[k][data[k].findIndex(r=>r.id===id)]=record;
+ else data[k].push(record);
+}
+Object.keys(fields).forEach(k=>{
+ $(k+'f').addEventListener('submit',e=>{
+  e.preventDefault();
+  const id=Number(val(k+'id'))||null;
+  save(k,formValues(k),id);
+  resetForm(k);
+  render();
+  alert(names[k]+' saved successfully!');
+ });
+});
+function edit(k,id){
+ const r=data[k].find(x=>x.id===id);
+ if(!r)return;
+ $(k+'id').value=id;
+ fields[k].forEach(f=>$(f).value=r[f]);
+ $(k+'title').textContent='Edit '+names[k];
+ $(k+'f').scrollIntoView({behavior:'smooth'});
+}
+function del(k,id){
+ if(!confirm('Delete this '+names[k]+'?'))return;
+ data[k]=data[k].filter(r=>r.id!==id);
+ if(k==='p'){
+  data.a=data.a.filter(a=>a.apatient!==id);
+  data.b=data.b.filter(b=>b.bpatient!==id);
+ }
+ if(k==='d')data.a=data.a.filter(a=>a.adoctor!==id);
+ render();
+}
+function options(id,items,label){
+ const s=$(id),old=s.value;
+ s.replaceChildren(new Option('Select',''));
+ items.forEach(r=>s.add(new Option(label(r),r.id)));
+ if(items.some(r=>String(r.id)===old))s.value=old;
+}
+function table(headers,rows){
+ const t=document.createElement('table'),thead=t.createTHead(),hr=thead.insertRow();
+ headers.forEach(h=>hr.insertCell().outerHTML='<th>'+h+'</th>');
+ const body=t.createTBody();
+ rows.forEach(row=>{
+  const tr=body.insertRow();
+  row.forEach(v=>{
+   const td=tr.insertCell();
+   if(v instanceof Node)td.appendChild(v);else td.textContent=v??'';
+  });
+ });
+ return t;
+}
+function actions(k,id){
+ const box=document.createElement('div');
+ const e=document.createElement('button');e.textContent='Edit';e.className='edit';e.onclick=()=>edit(k,id);
+ const d=document.createElement('button');d.textContent='Delete';d.className='danger';d.onclick=()=>del(k,id);
+ box.append(e,d);return box;
+}
+function records(k,headers,values){
+ const q=$('search').value.toLowerCase();
+ const rows=data[k].filter(r=>headers.join(' ').toLowerCase().includes(q)||values(r).join(' ').toLowerCase().includes(q))
+ .map(r=>[...values(r),actions(k,r.id)]);
+ $(k+'t').replaceChildren(table([...headers,'Operations'],rows));
+}
+function render(){
+ options('apatient',data.p,r=>r.pname);
+ options('bpatient',data.p,r=>r.pname);
+ options('adoctor',data.d,r=>r.dname+' - '+r.dspec);
+ records('p',['ID','Name','Age','Gender','Phone','Address','Blood'],r=>[r.id,r.pname,r.page,r.pgender,r.pphone,r.paddress,r.pblood]);
+ records('d',['ID','Name','Specialization','Experience','Fee','Phone'],r=>[r.id,r.dname,r.dspec,r.dexp+' years','₹'+r.dfee,r.dphone]);
+ records('x',['ID','Department','Head Doctor','Location'],r=>[r.id,r.xname,r.xhead,r.xlocation]);
+ records('a',['ID','Patient','Doctor','Date','Time','Status'],r=>[r.id,data.p.find(p=>p.id===r.apatient)?.pname,data.d.find(d=>d.id===r.adoctor)?.dname,r.adate,r.atime,r.astatus]);
+ records('b',['ID','Patient','Description','Amount','Status'],r=>[r.id,data.p.find(p=>p.id===r.bpatient)?.pname,r.bdesc,'₹'+r.bamount,r.bstatus]);
+ $('cp').textContent=data.p.length;
+ $('cd').textContent=data.d.length;
+ $('ca').textContent=data.a.length;
+ $('cb').textContent=data.b.length;
+ const recent=data.a.slice(-5).reverse().map(r=>[
+  r.id,data.p.find(p=>p.id===r.apatient)?.pname,
+  data.d.find(d=>d.id===r.adoctor)?.dname,r.adate,r.astatus
+ ]);
+ $('recent').replaceChildren(table(['ID','Patient','Doctor','Date','Status'],recent));
+}
+function searchRecords(){render()}
+
+render();
+<script>
+const STORAGE_KEY = "hospitalManagementData";
+
+const data = {
+    p: [],
+    d: [],
+    a: [],
+    x: [],
+    b: []
+};
+
+const fields = {
+    p: ["pname", "page", "pgender", "pphone", "paddress", "pblood"],
+    d: ["dname", "dspec", "dexp", "dfee", "dphone"],
+    a: ["apatient", "adoctor", "adate", "atime", "astatus"],
+    x: ["xname", "xhead", "xlocation"],
+    b: ["bpatient", "bdesc", "bamount", "bstatus"]
+};
+
+const names = {
+    p: "Patient",
+    d: "Doctor",
+    a: "Appointment",
+    x: "Department",
+    b: "Bill"
+};
+
+let counters = {
+    p: 1,
+    d: 1,
+    a: 1,
+    x: 1,
+    b: 1
+};
+
+const $ = id => document.getElementById(id);
+
+function saveData() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        data: data,
+        counters: counters
+    }));
+}
+
+function loadData() {
+    try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+
+        if (saved) {
+            const parsed = JSON.parse(saved);
+
+            Object.keys(data).forEach(k => {
+                data[k] = Array.isArray(parsed.data[k])
+                    ? parsed.data[k]
+                    : [];
+            });
+
+            Object.keys(counters).forEach(k => {
+                counters[k] = Math.max(
+                    Number(parsed.counters?.[k]) || 1,
+                    ...data[k].map(r => Number(r.id) + 1),
+                    1
+                );
+            });
+        }
+    } catch (error) {
+        alert("Saved data could not be read. Please check your browser storage.");
+    }
+}
+
+function page(id, btn) {
+    document.querySelectorAll(".view").forEach(v =>
+        v.classList.add("hidden")
+    );
+
+    $(id).classList.remove("hidden");
+
+    document.querySelectorAll("nav button").forEach(b =>
+        b.classList.remove("active")
+    );
+
+    btn.classList.add("active");
+    $("search").value = "";
+    render();
+}
+
+function resetForm(k) {
+    $(k + "f").reset();
+    $(k + "id").value = "";
+    $(k + "title").textContent = "Add " + names[k];
+}
+
+function formValues(k) {
+    return fields[k].map(id => {
+        if (["apatient", "adoctor", "bpatient"].includes(id)) {
+            return Number($(id).value);
+        }
+
+        if (["page", "dexp", "dfee", "bamount"].includes(id)) {
+            return Number($(id).value);
+        }
+
+        return $(id).value.trim();
+    });
+}
+
+function saveRecord(k, values, id) {
+    const record = { id: id || counters[k]++ };
+
+    fields[k].forEach((field, i) => {
+        record[field] = values[i];
+    });
+
+    if (id) {
+        const index = data[k].findIndex(r => r.id === id);
+
+        if (index === -1) return false;
+
+        data[k][index] = record;
+    } else {
+        data[k].push(record);
+    }
+
+    saveData();
+    return true;
+}
+
+Object.keys(fields).forEach(k => {
+    $(k + "f").addEventListener("submit", event => {
+        event.preventDefault();
+
+        const id = Number($(k + "id").value) || null;
+
+        if (k === "a") {
+            const patientId = Number($("apatient").value);
+            const doctorId = Number($("adoctor").value);
+
+            if (!data.p.some(p => p.id === patientId) ||
+                !data.d.some(d => d.id === doctorId)) {
+                alert("Please select a valid patient and doctor.");
+                return;
+            }
+        }
+
+        if (k === "b") {
+            const patientId = Number($("bpatient").value);
+
+            if (!data.p.some(p => p.id === patientId)) {
+                alert("Please select a valid patient.");
+                return;
+            }
+        }
+
+        const values = formValues(k);
+
+        if (saveRecord(k, values, id)) {
+            resetForm(k);
+            render();
+            alert(names[k] + (id ? " updated" : " saved") +
+                  " successfully!");
+        }
+    });
+});
+
+function edit(k, id) {
+    const record = data[k].find(r => r.id === id);
+    if (!record) return;
+
+    $(k + "id").value = id;
+
+    fields[k].forEach(field => {
+        $(field).value = record[field];
+    });
+
+    $(k + "title").textContent = "Edit " + names[k];
+    $(k + "f").scrollIntoView({ behavior: "smooth" });
+}
+
+function del(k, id) {
+    if (!confirm("Are you sure you want to delete this " +
+                 names[k].toLowerCase() + "?")) return;
+
+    data[k] = data[k].filter(r => r.id !== id);
+
+    if (k === "p") {
+        data.a = data.a.filter(a => a.apatient !== id);
+        data.b = data.b.filter(b => b.bpatient !== id);
+    }
+
+    if (k === "d") {
+        data.a = data.a.filter(a => a.adoctor !== id);
+    }
+
+    saveData();
+    render();
+}
+
+function options(id, items, label) {
+    const select = $(id);
+    const previous = select.value;
+
+    select.replaceChildren(new Option("Select...", ""));
+
+    items.forEach(record => {
+        select.add(new Option(label(record), record.id));
+    });
+
+    if (items.some(r => String(r.id) === previous)) {
+        select.value = previous;
+    }
+}
+
+function makeTable(headers, rows) {
+    const table = document.createElement("table");
+    const head = table.createTHead().insertRow();
+
+    headers.forEach(text => {
+        const th = document.createElement("th");
+        th.textContent = text;
+        head.appendChild(th);
+    });
+
+    const body = table.createTBody();
+
+    rows.forEach(values => {
+        const row = body.insertRow();
+
+        values.forEach(value => {
+            const cell = row.insertCell();
+
+            if (value instanceof Node) {
+                cell.appendChild(value);
+            } else {
+                cell.textContent = value ?? "";
+            }
+        });
+    });
+
+    return table;
+}
+
+function actionButtons(k, id) {
+    const box = document.createElement("div");
+
+    const editButton = document.createElement("button");
+    editButton.textContent = "Edit";
+    editButton.className = "edit";
+    editButton.onclick = () => edit(k, id);
+
+    const deleteButton = document.createElement("button");
+    deleteButton.textContent = "Delete";
+    deleteButton.className = "danger";
+    deleteButton.onclick = () => del(k, id);
+
+    box.append(editButton, deleteButton);
+    return box;
+}
+
+function records(k, headers, values) {
+    const query = $("search").value.toLowerCase();
+
+    const rows = data[k]
+        .filter(record =>
+            values(record).join(" ").toLowerCase().includes(query)
+        )
+        .map(record => [
+            ...values(record),
+            actionButtons(k, record.id)
+        ]);
+
+    $(k + "t").replaceChildren(
+        makeTable([...headers, "Operations"], rows)
+    );
+}
+
+function render() {
+    options("apatient", data.p, r => r.pname);
+    options("bpatient", data.p, r => r.pname);
+    options("adoctor", data.d, r => r.dname + " - " + r.dspec);
+
+    records("p",
+        ["ID", "Name", "Age", "Gender", "Phone", "Address", "Blood"],
+        r => [r.id, r.pname, r.page, r.pgender,
+              r.pphone, r.paddress, r.pblood]);
+
+    records("d",
+        ["ID", "Name", "Specialization", "Experience", "Fee", "Phone"],
+        r => [r.id, r.dname, r.dspec, r.dexp + " years",
+              "₹" + r.dfee, r.dphone]);
+
+    records("a",
+        ["ID", "Patient", "Doctor", "Date", "Time", "Status"],
+        r => [r.id,
+              data.p.find(p => p.id === r.apatient)?.pname,
+              data.d.find(d => d.id === r.adoctor)?.dname,
+              r.adate, r.atime, r.astatus]);
+
+    records("x",
+        ["ID", "Department", "Head Doctor", "Location"],
+        r => [r.id, r.xname, r.xhead, r.xlocation]);
+
+    records("b",
+        ["ID", "Patient", "Description", "Amount", "Status"],
+        r => [r.id,
+              data.p.find(p => p.id === r.bpatient)?.pname,
+              r.bdesc, "₹" + r.bamount, r.bstatus]);
+
+    $("cp").textContent = data.p.length;
+    $("cd").textContent = data.d.length;
+    $("ca").textContent = data.a.length;
+    $("cb").textContent = data.b.length;
+
+    const recent = data.a.slice(-5).reverse().map(r => [
+        r.id,
+        data.p.find(p => p.id === r.apatient)?.pname,
+        data.d.find(d => d.id === r.adoctor)?.dname,
+        r.adate,
+        r.astatus
+    ]);
+
+    $("recent").replaceChildren(
+        makeTable(["ID", "Patient", "Doctor", "Date", "Status"], recent)
+    );
+}
+
+function searchRecords() {
+    render();
+}
+
+loadData();
+render();
+</script>
+</script>
+</body>
+</html>
