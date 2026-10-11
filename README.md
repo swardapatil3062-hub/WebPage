@@ -23,7 +23,7 @@ A simple and attractive **Hospital Management System website** built using HTML,
 - **JavaScript** – Functionality and record management
 - **Browser Local Storage** – Saving data locally
 
-## 📂 Project Structure
+##  Project Structure
 
 ```text
 Hospital-Management-System/
