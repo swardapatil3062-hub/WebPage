@@ -47,6 +47,6 @@ This project uses browser Local Storage instead of a database. Records are store
 
 The objective of this project is to create a simple, attractive, and easy-to-use website for managing basic hospital operations and learning front-end web development.
 
-## 👩‍💻 Author
+##  Author
 **Swarda Patil**
 
